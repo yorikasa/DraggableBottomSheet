@@ -24,8 +24,8 @@ public class BottomSheetContainerViewController: UIViewController {
         view.layer.shadowOpacity = Float(Constants.shadowOpacity)
     }
 
-    func prepare(constraint: NSLayoutConstraint) {
-        animator.prepare(bottomConstraint: constraint) { [weak self] in
+    func prepare(constraint: NSLayoutConstraint, topOffset: BottomSheetAnimator.TopOffset) {
+        animator.prepare(topConstraint: constraint, topOffset: topOffset) { [weak self] in
             self?.parent?.view.layoutIfNeeded()
         }
     }
@@ -58,7 +58,7 @@ public class BottomSheetContainerViewController: UIViewController {
 
 
 public protocol BottomSheetPresenting: UIViewController {
-    var coordinations: [CGFloat] { get set }
+    var topOffset: BottomSheetAnimator.TopOffset? { get set }
     var draggableViewController: BottomSheetContainerViewController? { get set }
 
     func addBottomSheetView(_ viewController: BottomSheetViewController)
@@ -78,15 +78,17 @@ public extension BottomSheetPresenting {
 
     private func prepareSheetPosition(_ sheetViewController: BottomSheetContainerViewController) {
         let topMargin: CGFloat = 88
-        let bottomConstraint = sheetViewController.view.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        let topConstraint = sheetViewController.view.topAnchor.constraint(equalTo: view.topAnchor,
+                                                                          constant: topMargin)
 
         NSLayoutConstraint.activate([
             sheetViewController.view.widthAnchor.constraint(equalTo: view.widthAnchor),
             sheetViewController.view.heightAnchor.constraint(equalTo: view.heightAnchor,
                                                              constant: -topMargin),
-            bottomConstraint
+            topConstraint
         ])
-        sheetViewController.prepare(constraint: bottomConstraint)
+        let topOffset = self.topOffset ?? BottomSheetAnimator.TopOffset(offsetExpanded: topMargin)
+        sheetViewController.prepare(constraint: topConstraint, topOffset: topOffset)
     }
 
     func move(direction: BottomSheetAnimator.Direction) {

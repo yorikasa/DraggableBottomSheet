@@ -9,21 +9,44 @@ import UIKit
 
 public class BottomSheetAnimator {
 
-    private enum State {
+    public enum State {
         case collapsed
         case halfExpanded
         case expanded
+    }
 
-        var bottomConstraint: CGFloat {
-            switch self {
+    public struct TopOffset {
+        var collapsed: CGFloat
+        var halfExpanded: CGFloat
+        var expanded: CGFloat
+
+        public init(offsetExpanded: CGFloat) {
+            collapsed = UIScreen.main.bounds.height - 200
+            halfExpanded = UIScreen.main.bounds.height - 500
+            expanded = offsetExpanded
+        }
+
+        public init(offsetCollapsed: CGFloat, offsetHalfExpanded: CGFloat, offsetExpanded: CGFloat) {
+            collapsed = offsetCollapsed
+            halfExpanded = offsetHalfExpanded
+            expanded = offsetExpanded
+        }
+
+        func offset(_ state: State) -> CGFloat {
+            switch state {
             case .collapsed:
-                return UIScreen.main.bounds.height * 0.7
+                return collapsed
             case .halfExpanded:
-                return UIScreen.main.bounds.height * 0.4
+                return halfExpanded
             case .expanded:
-                return 0
+                return expanded
             }
         }
+    }
+
+    public enum Direction {
+        case upward
+        case downward
     }
 
     private struct Constants {
@@ -32,41 +55,41 @@ public class BottomSheetAnimator {
     }
 
     private var runningAnimators = [UIViewPropertyAnimator]()
-    private var bottomConstraint: NSLayoutConstraint?
+    private var topConstraint: NSLayoutConstraint?
     private var initialBottomConstraintConstant: CGFloat?
-
     private var completion: (() -> Void)?
-
-    public enum Direction {
-        case upward
-        case downward
-    }
+    private var topOffset: TopOffset?
 
     private func swipingDirection(_ velocityY: CGFloat) -> Direction {
         return velocityY > 0 ? .downward : .upward
     }
 
     private func finalPosition(to direction: Direction, from currentPosition: CGFloat) -> CGFloat {
+        guard let topOffset = topOffset else { return 0 }
+
         switch currentPosition {
-        case ..<State.expanded.bottomConstraint:
-            return State.expanded.bottomConstraint
+        case ..<topOffset.offset(.expanded):
+            return topOffset.offset(.expanded)
 
-        case State.expanded.bottomConstraint..<State.halfExpanded.bottomConstraint:
-            return direction == .upward ? State.expanded.bottomConstraint
-                                        : State.halfExpanded.bottomConstraint
+        case topOffset.offset(.expanded)..<topOffset.offset(.halfExpanded):
+            return direction == .upward ? topOffset.offset(.expanded)
+                                        : topOffset.offset(.halfExpanded)
 
-        case State.halfExpanded.bottomConstraint...State.collapsed.bottomConstraint:
-            return direction == .upward ? State.halfExpanded.bottomConstraint
-                                        : State.collapsed.bottomConstraint
+        case topOffset.offset(.halfExpanded)...topOffset.offset(.collapsed):
+            return direction == .upward ? topOffset.offset(.halfExpanded)
+                                        : topOffset.offset(.collapsed)
         default:
-            return State.collapsed.bottomConstraint
+            return topOffset.offset(.collapsed)
         }
     }
 
-    public func prepare(bottomConstraint: NSLayoutConstraint, completion: @escaping () -> Void) {
-        self.bottomConstraint = bottomConstraint
+    public func prepare(topConstraint: NSLayoutConstraint,
+                        topOffset: BottomSheetAnimator.TopOffset,
+                        completion: @escaping () -> Void) {
+        self.topConstraint = topConstraint
         self.completion = completion
-        animate(to: State.collapsed.bottomConstraint)
+        self.topOffset = topOffset
+        animate(to: topOffset.offset(.collapsed))
     }
 
     private func canDrag(with point: CGFloat?) -> Bool {
@@ -75,8 +98,9 @@ public class BottomSheetAnimator {
     }
 
     private func contained(_ point: CGFloat) -> Bool {
-        let margin = UIScreen.main.bounds.height * 0.01
-        let sheetRange = (State.expanded.bottomConstraint - margin)...(State.collapsed.bottomConstraint + margin)
+        guard let topOffset = topOffset else { return false }
+
+        let sheetRange = topOffset.offset(.expanded)...topOffset.offset(.collapsed)
         if sheetRange.contains(point) { return true }
         return false
     }
@@ -84,16 +108,16 @@ public class BottomSheetAnimator {
     public func dragging(delta: CGFloat, velocity: CGFloat, state: UIGestureRecognizer.State) {
         switch state {
         case .began:
-            if canDrag(with: bottomConstraint?.constant) {
-                initialBottomConstraintConstant = bottomConstraint?.constant
+            if canDrag(with: topConstraint?.constant) {
+                initialBottomConstraintConstant = topConstraint?.constant
             }
         case .changed:
             if let constant = initialBottomConstraintConstant, canDrag(with: constant + delta) {
-                bottomConstraint?.constant = constant + delta
+                topConstraint?.constant = constant + delta
             }
         default:
-            if let bottomConstraint = bottomConstraint?.constant {
-                let position = finalPosition(to: swipingDirection(velocity), from: bottomConstraint)
+            if let topConstraint = topConstraint?.constant {
+                let position = finalPosition(to: swipingDirection(velocity), from: topConstraint)
                 animate(to: position, velocity: velocity)
             }
             initialBottomConstraintConstant = nil
@@ -101,8 +125,8 @@ public class BottomSheetAnimator {
     }
 
     public func animate(to direction: Direction) {
-        if let bottomConstraint = bottomConstraint?.constant {
-            let position = finalPosition(to: direction, from: bottomConstraint)
+        if let topConstraint = topConstraint?.constant {
+            let position = finalPosition(to: direction, from: topConstraint)
             animate(to: position)
         }
     }
@@ -117,14 +141,14 @@ public class BottomSheetAnimator {
             animator.stopAnimation(true)
         }
 
-        let distance = abs(finalPosition - (bottomConstraint?.constant ?? 1))
+        let distance = abs(finalPosition - (topConstraint?.constant ?? 1))
         let dy = abs(velocity / distance)
         let parameters = UISpringTimingParameters(dampingRatio: Constants.animationDampingRatio,
                                                   initialVelocity: CGVector(dx: 0, dy: dy))
         let moveAnimator = UIViewPropertyAnimator(duration: Constants.animationDuration,
                                                   timingParameters: parameters)
         moveAnimator.addAnimations {
-            self.bottomConstraint?.constant = finalPosition
+            self.topConstraint?.constant = finalPosition
             self.completion?()
         }
 
