@@ -77,17 +77,16 @@ public extension BottomSheetPresenting {
     }
 
     private func prepareSheetPosition(_ sheetViewController: BottomSheetContainerViewController) {
-        let topMargin: CGFloat = 88
-        let topConstraint = sheetViewController.view.topAnchor.constraint(equalTo: view.topAnchor,
-                                                                          constant: topMargin)
+        let topOffset = self.topOffset ?? BottomSheetAnimator.TopOffset(offsetExpanded: 88)
+        let topConstraint = sheetViewController.view.topAnchor.constraint(equalTo: view.topAnchor, constant: topOffset.expanded)
 
         NSLayoutConstraint.activate([
             sheetViewController.view.widthAnchor.constraint(equalTo: view.widthAnchor),
             sheetViewController.view.heightAnchor.constraint(equalTo: view.heightAnchor,
-                                                             constant: -topMargin),
+                                                             constant: -topOffset.expanded),
             topConstraint
         ])
-        let topOffset = self.topOffset ?? BottomSheetAnimator.TopOffset(offsetExpanded: topMargin)
+
         sheetViewController.prepare(constraint: topConstraint, topOffset: topOffset)
     }
 
