@@ -16,9 +16,9 @@ public class BottomSheetAnimator {
     }
 
     public struct TopOffset {
-        var collapsed: CGFloat
-        var halfExpanded: CGFloat
-        var expanded: CGFloat
+        public var collapsed: CGFloat
+        public var halfExpanded: CGFloat
+        public var expanded: CGFloat
 
         public init(offsetExpanded: CGFloat) {
             collapsed = UIScreen.main.bounds.height - 200
