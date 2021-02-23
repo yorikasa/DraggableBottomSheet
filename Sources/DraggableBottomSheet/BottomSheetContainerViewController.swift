@@ -49,7 +49,10 @@ public class BottomSheetContainerViewController: UIViewController {
         view.addGestureRecognizer(recognizer)
     }
 
-    @objc func handlePanGesture(_ sender: UIPanGestureRecognizer) {
+    @objc public func handlePanGesture(_ sender: UIPanGestureRecognizer) {
+        if sender.state == .began {
+            view.endEditing(true)
+        }
         animator.dragging(delta: sender.translation(in: sender.view).y,
                           velocity: sender.velocity(in: sender.view).y,
                           state: sender.state)

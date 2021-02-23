@@ -50,7 +50,7 @@ public class BottomSheetAnimator {
     }
 
     private struct Constants {
-        static let animationDuration: Double = 0.5
+        static let animationDuration: Double = 0.4
         static let animationDampingRatio: CGFloat = 0.8
     }
 
@@ -71,7 +71,7 @@ public class BottomSheetAnimator {
         case ..<topOffset.offset(.expanded):
             return topOffset.offset(.expanded)
 
-        case topOffset.offset(.expanded)..<topOffset.offset(.halfExpanded):
+        case topOffset.offset(.expanded)...topOffset.offset(.halfExpanded):
             return direction == .upward ? topOffset.offset(.expanded)
                                         : topOffset.offset(.halfExpanded)
 
