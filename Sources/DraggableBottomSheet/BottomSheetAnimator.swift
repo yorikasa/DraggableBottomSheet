@@ -71,7 +71,7 @@ public class BottomSheetAnimator {
         case ..<topOffset.offset(.expanded):
             return topOffset.offset(.expanded)
 
-        case topOffset.offset(.expanded)...topOffset.offset(.halfExpanded):
+        case topOffset.offset(.expanded)..<topOffset.offset(.halfExpanded):
             return direction == .upward ? topOffset.offset(.expanded)
                                         : topOffset.offset(.halfExpanded)
 
