@@ -92,11 +92,6 @@ public class BottomSheetAnimator {
         animate(to: topOffset.offset(.collapsed))
     }
 
-    private func canDrag(with point: CGFloat?) -> Bool {
-        if let point = point, contained(point) { return true }
-        return false
-    }
-
     private func contained(_ point: CGFloat) -> Bool {
         guard let topOffset = topOffset else { return false }
 
@@ -105,22 +100,45 @@ public class BottomSheetAnimator {
         return false
     }
 
+    private func deltaOffsetDiff(_ point: CGFloat) -> CGFloat {
+        guard let topOffset = topOffset else { return 0 }
+        let sheetRange = topOffset.offset(.expanded)...topOffset.offset(.collapsed)
+
+        if point < sheetRange.lowerBound {
+            return point - sheetRange.lowerBound
+        }
+        if sheetRange.upperBound < point {
+            return point - sheetRange.upperBound
+        }
+        return 0
+    }
+
+    private func powDiff(_ diff: CGFloat) -> CGFloat {
+        let sign: CGFloat = diff.sign == .plus ? 1.0 : -1.0
+        return pow(abs(diff), 3/5) * sign // magic number :)
+    }
+
     public func dragging(delta: CGFloat, velocity: CGFloat, state: UIGestureRecognizer.State) {
         switch state {
         case .began:
-            if canDrag(with: topConstraint?.constant) {
-                initialBottomConstraintConstant = topConstraint?.constant
-            }
+            initialBottomConstraintConstant = topConstraint?.constant
         case .changed:
-            if let constant = initialBottomConstraintConstant, canDrag(with: constant + delta) {
-                topConstraint?.constant = constant + delta
+            if let constant = initialBottomConstraintConstant {
+                if contained(constant + delta) {
+                    topConstraint?.constant = constant + delta
+                } else {
+                    let diff = deltaOffsetDiff(constant + delta)
+                    topConstraint?.constant = constant + (delta - diff)  + powDiff(diff)
+                }
             }
-        default:
+        case .ended, .cancelled:
             if let topConstraint = topConstraint?.constant {
                 let position = finalPosition(to: swipingDirection(velocity), from: topConstraint)
                 animate(to: position, velocity: velocity)
             }
             initialBottomConstraintConstant = nil
+        default:
+            break
         }
     }
 
@@ -141,12 +159,8 @@ public class BottomSheetAnimator {
             animator.stopAnimation(true)
         }
 
-        let distance = abs(finalPosition - (topConstraint?.constant ?? 1))
-        let dy = abs(velocity / distance)
-        let parameters = UISpringTimingParameters(dampingRatio: Constants.animationDampingRatio,
-                                                  initialVelocity: CGVector(dx: 0, dy: dy))
         let moveAnimator = UIViewPropertyAnimator(duration: Constants.animationDuration,
-                                                  timingParameters: parameters)
+                                                  dampingRatio: Constants.animationDampingRatio)
         moveAnimator.addAnimations {
             self.topConstraint?.constant = finalPosition
             self.completion?()
