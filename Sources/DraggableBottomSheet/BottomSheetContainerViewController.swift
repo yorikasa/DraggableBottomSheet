@@ -30,6 +30,10 @@ public class BottomSheetContainerViewController: UIViewController {
         }
     }
 
+    public func configureTopOffset(_ topOffset: BottomSheetAnimator.TopOffset) {
+        animator.configure(topOffset: topOffset)
+    }
+
     func ready(_ containedViewController: UIViewController) {
         addChild(containedViewController)
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -61,7 +65,6 @@ public class BottomSheetContainerViewController: UIViewController {
 
 
 public protocol BottomSheetPresenting: UIViewController {
-    var topOffset: BottomSheetAnimator.TopOffset? { get set }
     var draggableViewController: BottomSheetContainerViewController? { get set }
 
     func addBottomSheetView(_ viewController: BottomSheetViewController)
@@ -75,18 +78,18 @@ public extension BottomSheetPresenting {
 
         addChild(bottomSheetViewController)
         view.addSubview(bottomSheetViewController.view)
-        prepareSheetPosition(bottomSheetViewController)
+        prepareInitialSheetPosition(bottomSheetViewController)
         bottomSheetViewController.didMove(toParent: self)
     }
 
-    private func prepareSheetPosition(_ sheetViewController: BottomSheetContainerViewController) {
-        let topOffset = self.topOffset ?? BottomSheetAnimator.TopOffset(offsetExpanded: 88)
-        let topConstraint = sheetViewController.view.topAnchor.constraint(equalTo: view.topAnchor, constant: topOffset.expanded)
+    private func prepareInitialSheetPosition(_ sheetViewController: BottomSheetContainerViewController) {
+        let topOffset = BottomSheetAnimator.TopOffset(offsetExpanded: 88)
+        let topConstraint = sheetViewController.view.topAnchor.constraint(equalTo: view.topAnchor, constant: topOffset.halfExpanded)
 
         NSLayoutConstraint.activate([
             sheetViewController.view.widthAnchor.constraint(equalTo: view.widthAnchor),
             sheetViewController.view.heightAnchor.constraint(equalTo: view.heightAnchor,
-                                                             constant: -topOffset.expanded),
+                                                             constant: view.frame.height),
             topConstraint
         ])
 

@@ -21,8 +21,8 @@ public class BottomSheetAnimator {
         public var expanded: CGFloat
 
         public init(offsetExpanded: CGFloat) {
-            collapsed = UIScreen.main.bounds.height - 200
-            halfExpanded = UIScreen.main.bounds.height - 500
+            collapsed = UIScreen.main.bounds.height - 100
+            halfExpanded = UIScreen.main.bounds.height / 2
             expanded = offsetExpanded
         }
 
@@ -83,13 +83,16 @@ public class BottomSheetAnimator {
         }
     }
 
+    public func configure(topOffset: TopOffset) {
+        self.topOffset = topOffset
+    }
+
     public func prepare(topConstraint: NSLayoutConstraint,
                         topOffset: BottomSheetAnimator.TopOffset,
                         completion: @escaping () -> Void) {
         self.topConstraint = topConstraint
         self.completion = completion
         self.topOffset = topOffset
-        animate(to: topOffset.offset(.collapsed))
     }
 
     private func contained(_ point: CGFloat) -> Bool {
