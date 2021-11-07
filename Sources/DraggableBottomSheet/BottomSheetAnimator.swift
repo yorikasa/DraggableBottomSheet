@@ -152,6 +152,19 @@ public class BottomSheetAnimator {
         }
     }
 
+    public func animate(to state: State) {
+        guard let topOffset = topOffset else { return }
+
+        switch state {
+        case .collapsed:
+            animate(to: topOffset.collapsed)
+        case .halfExpanded:
+            animate(to: topOffset.halfExpanded)
+        case .expanded:
+            animate(to: topOffset.expanded)
+        }
+    }
+
     public func animate(to finalPosition: CGFloat, velocity: CGFloat = 0) {
         // Remove inactive animators first
         // Then, if there is an active animation (I don't assume there's multiple animations...)
