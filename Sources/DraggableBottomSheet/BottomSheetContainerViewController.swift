@@ -56,6 +56,10 @@ public class BottomSheetContainerViewController: UIViewController {
         animator.animate(to: .collapsed)
     }
 
+    func halfExpanded() {
+        animator.animate(to: .halfExpanded)
+    }
+
     private func addPanGestureRecognizer() {
         let recognizer = UIPanGestureRecognizer(target: self, action: #selector(handlePanGesture(_:)))
         view.addGestureRecognizer(recognizer)
@@ -113,6 +117,10 @@ public extension BottomSheetPresenting {
 
     func collapse() {
         draggableViewController?.collapse()
+    }
+
+    func halfExpanded() {
+        draggableViewController?.halfExpanded()
     }
 }
 
