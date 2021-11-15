@@ -96,8 +96,7 @@ public extension BottomSheetPresenting {
 
         NSLayoutConstraint.activate([
             sheetViewController.view.widthAnchor.constraint(equalTo: view.widthAnchor),
-            sheetViewController.view.heightAnchor.constraint(equalTo: view.heightAnchor,
-                                                             constant: view.frame.height),
+            sheetViewController.view.heightAnchor.constraint(equalTo: view.heightAnchor),
             topConstraint
         ])
 
