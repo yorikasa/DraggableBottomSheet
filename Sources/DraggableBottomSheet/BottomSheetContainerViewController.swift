@@ -63,6 +63,7 @@ public class BottomSheetContainerViewController: UIViewController {
     private func addPanGestureRecognizer() {
         let recognizer = UIPanGestureRecognizer(target: self, action: #selector(handlePanGesture(_:)))
         view.addGestureRecognizer(recognizer)
+        recognizer.delegate = self
     }
 
     @objc public func handlePanGesture(_ sender: UIPanGestureRecognizer) {
@@ -72,6 +73,12 @@ public class BottomSheetContainerViewController: UIViewController {
         animator.dragging(delta: sender.translation(in: sender.view).y,
                           velocity: sender.velocity(in: sender.view).y,
                           state: sender.state)
+    }
+}
+
+extension BottomSheetContainerViewController: UIGestureRecognizerDelegate {
+    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRequireFailureOf otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        return true
     }
 }
 
